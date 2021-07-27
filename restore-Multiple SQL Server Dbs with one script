@@ -1,0 +1,46 @@
+#Script works with Windows Authentication
+$backupRoot = Get-ChildItem -Path "G:\Baks\" #Change the path
+$datafilesDest = "F:\SQL DATA\MSSQL12.MSSQLSERVER\MSSQL\DATA"  #Change the path
+$logfilesDest = "E:\SQL DATA\" #Change the path
+$server = "127.0.0.1"  #Change the Server IP
+
+## For each folder in the backup root directory...
+#
+foreach($folder in $backupRoot)
+{   
+    # Get the most recent .bak files for all databases...
+    $backupFiles = Get-ChildItem -Path $folder.FullName -Filter "*.bak" -Recurse | Sort-Object -Property CreationTime -Descending | Select-Object -First 1
+
+
+    # For each .bak file...
+    foreach ($backupFile in $backupFiles)
+    {
+        # Restore the header to get the database name...
+        $query = "RESTORE HEADERONLY FROM DISK = N'"+$backupFile.FullName+"'"
+        $headerInfo = Invoke-Sqlcmd -ServerInstance $server -Query $query
+        $databaseName = $headerInfo.DatabaseName
+
+        # Restore the file list to get the logical filenames of the database files...
+        $query = "RESTORE FILELISTONLY FROM DISK = N'"+$backupFile.FullName+"'"
+        $files = Invoke-Sqlcmd -ServerInstance $server -Query $query
+
+        # Differentiate data files from log files...
+        $dataFile = $files | Where-Object -Property Type -EQ "D"
+        $logFile = $files | Where-Object -Property Type -EQ "L"
+
+        # Set some variables...
+        $dataFileName = $dataFile.LogicalName
+        $logFileName = $logFile.LogicalName
+
+        # Set the destination of the restored files...
+        $dataFileFullPath = $datafilesDest+"\"+$dataFileName+".mdf"
+        $logFileFullPath = $logfilesDest+"\"+$logFileName+".ldf"
+
+        # Create some "Relocate" file objects to pass to the Restore-SqlDatabase cmdlet...
+        $RelocateData = New-Object 'Microsoft.SqlServer.Management.Smo.RelocateFile, Microsoft.SqlServer.SmoExtended, Version=12.0.0.0, Culture=neutral, PublicKeyToken=89845dcd8080cc91' -ArgumentList $dataFileName, $dataFileFullPath
+        $RelocateLog = New-Object 'Microsoft.SqlServer.Management.Smo.RelocateFile, Microsoft.SqlServer.SmoExtended, Version=12.0.0.0, Culture=neutral, PublicKeyToken=89845dcd8080cc91' -ArgumentList $logFileName, $logFileFullPath
+
+        # Perform the database restore... and then go around the loop.
+        Restore-SqlDatabase -ServerInstance $server -Database $databaseName -BackupFile $backupFile.FullName -RelocateFile @($RelocateData,$RelocateLog) -ReplaceDatabase -norecovery
+    }
+} 
