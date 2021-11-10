@@ -1,0 +1,21 @@
+$ServiceName = ''  # Add Service Display names here
+
+foreach ($serv in $ServiceName){
+$Service = Get-Service -DisplayName $Serv
+
+if ($Service.Status -ne 'Running')
+{
+
+    Start-Service $Serv
+    write-host $Service.status
+    write-host 'Service starting'
+    Start-Sleep -seconds 10	
+    $Service.Refresh()
+    if ($Service.Status -eq 'Running')
+    {
+        Write-Host 'Service is now Running'
+    }
+
+}
+}
+
