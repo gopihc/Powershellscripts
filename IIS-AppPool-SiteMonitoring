@@ -1,0 +1,50 @@
+
+# IIS App Pool and Site check and start Apppool/Site.
+
+# Load IIS module:
+Import-Module WebAdministration
+ 
+# SET AppPool Name
+ $appols= 'DefaultAppPool'
+ foreach ($AppPoolName in $appols  ) {
+#Testing if a String is NULL or EMPTY.
+if ([string]::IsNullOrWhiteSpace($AppPoolName))
+{
+Write-Output "$AppPoolName does not exist"
+}
+else 
+{
+try {
+#Determines whether all elements of a file or directory path exist.
+if (Test-Path IIS:\AppPools\$AppPoolName){
+# Start App Pool if stopped else restart
+#Get the runtime state of the DefaultAppPool and checking the status
+if ((Get-WebAppPoolState($AppPoolName)).Value -eq "Stopped"){
+Write-Output "Starting IIS app pool"
+#starting the App Pool
+Start-WebAppPool $AppPoolName
+}
+else {
+Write-Output "Application pool is Running successfully"
+}
+}
+}
+catch {
+Write-Output $_.Exception.Message
+throw
+} 
+ 
+}
+}
+
+
+$sites = Get-Website | where {$_.State -eq 'Stopped' -and ($_.name -eq "Default Web Site" ) }
+
+$sites | ForEach-Object {
+    $sitename = $_.name
+    IF ($sitename -ne $NULL)
+    {  
+        Write-Host "$sitename is stopped. Starting it..."
+        Start-Website $sitename
+    }
+}
