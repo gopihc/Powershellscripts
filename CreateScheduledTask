@@ -1,0 +1,6 @@
+$A = New-ScheduledTaskAction -Execute "c:\scripts\my_project\scheduled_task.bat" -WorkingDirectory "c:\scripts\my_project"
+$T = New-ScheduledTaskTrigger -At 9am -Weekly -DaysofWeek Monday,Tuesday,Wednesday,Thursday,Friday
+$P = New-ScheduledTaskPrincipal -UserId "LOCALSERVICE" -LogonType ServiceAccount
+$S = New-ScheduledTaskSettingsSet
+$D = New-ScheduledTask -Action $A -Principal $P -Trigger $T -Settings $S
+Register-ScheduledTask "My Project" -InputObject $D
