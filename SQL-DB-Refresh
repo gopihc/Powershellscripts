@@ -1,0 +1,16 @@
+$Source_DatabaseName = 'Source_DatabaseName'
+$Destination_DatabaseName = 'Destination_DatabaseName'
+$Network_Transfer_Folder = '\\DestinationServer\Backup\DB_TRANSFER'
+$Local_Transfer_Folder = 'P:\DB_TRANSFER'
+$SourceServer = ''    #Set Source DB Server
+$DestinationServer=''  #Set Destination DB Server
+
+if (-not (Get-Module -Name dbatools)) { Import-Module \\192.168.1.1\Share\dbatools-master\dbatools.psd1 }
+#Delete files from the backup  directory
+Get-ChildItem -Path $Network_Transfer_Folder -Include *.* -File -Recurse | foreach { $_.Delete() }
+#backup Database
+Backup-DbaDatabase -SqlInstance $SourceServer -Databases $Source_DatabaseName -Type Full -BackupDirectory $Network_Transfer_Folder
+#Restore Database
+Restore-DbaDatabase -SqlServer $DestinationServer -Path $Network_Transfer_Folder -DatabaseName $Destination_DatabaseName -DestinationFilePrefix 'transfered_' -WithReplace -UseDestinationDefaultDirectories
+#Repair Orphan Users
+Repair-SqlOrphanUser -SqlServer $DestinationServer -Databases $Destination_DatabaseName
