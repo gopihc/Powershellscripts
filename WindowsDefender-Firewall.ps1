@@ -1,4 +1,4 @@
-
+#Enable Defender AV
 Set-MpPreference -DisableRealtimeMonitoring $false
 Set-MpPreference -DisableIOAVProtection $false
 New-Item -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows Defender" -Name "Real-Time Protection" -Force
