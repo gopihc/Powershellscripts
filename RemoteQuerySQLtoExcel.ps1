@@ -16,7 +16,7 @@
 .PARAMETER outputFile
     The path where the Excel file will be saved.
 .EXAMPLE
-    .\RemoteQuerytoSQL.ps1 -serverName "YourServerName" -databaseName "YourDatabaseName" -authUsername "YourUsername" -authPassword "YourPassword" -query "SELECT * FROM YourTable" -outputFile "C:\Path\To\OutputFile.xlsx"
+    .\RemoteQuerySQLtoExcel.ps1 -serverName "YourServerName" -databaseName "YourDatabaseName" -authUsername "YourUsername" -authPassword "YourPassword" -query "SELECT * FROM YourTable" -outputFile "C:\Path\To\OutputFile.xlsx"
     This example executes a SQL query and exports the results to an Excel file.
 #>
 
